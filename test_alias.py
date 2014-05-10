@@ -94,6 +94,18 @@ class TestAlias(unittest.TestCase):
         self.assertEqual('alias lss="ls -lhar --sort size"\n' +
                          'alias lst="ls -lhar --sort time"\n', script)
 
+    def test_change_alias(self):
+        f = io.StringIO('{"aliases": {}}')
+        backend = JSONBackend(f)
+        alias = Aliases(backend)
+
+        alias.add_alias(Alias("lss", "ls -lhar --sort size"))
+        alias.add_alias(Alias("lss", "ls -lha --sort size"))
+
+        script = alias.get_sh_script()
+
+        self.assertEqual('alias lss="ls -lha --sort size"\n', script)
+
     def test_backend(self):
         f = io.StringIO()
         backend = JSONBackend(f)

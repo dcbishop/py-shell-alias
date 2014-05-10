@@ -1,4 +1,25 @@
+#!/usr/bin/env python
+"""alias.py.
+
+Usage:
+    alias.py [--json=FILE] -s [-o OUTPUT]
+    alias.py -a <name> <command> [-j <aliases.json>]
+    alias.py (-h | --help)
+
+Options:
+    -s                          Generate shell script.
+    -j FILE, --json=FILE        Read aliases from JSON file.
+                                [default: ~/.config/aliases.json]
+    -a <name> <command>         Add alias to database.
+                                Will override any alias with the same name.
+    -o OUTPUT, --output=OUTPUT  Output to file [default: -]
+    -h --help                   Show help.
+"""
 import json
+import sys
+import os
+from pathlib import Path
+from docopt import docopt
 
 
 class Alias:
@@ -91,7 +112,7 @@ def dicts_to_aliases(dlist):
 class AliasesJSONDecoder(json.JSONDecoder):
     def decode(self, json_string):
         if json_string == '':
-            raise "WTF"
+            return {}
         default_obj = super(AliasesJSONDecoder, self).decode(json_string)
         if 'aliases' in default_obj:
             alias_objects = dicts_to_aliases(default_obj['aliases'])
@@ -114,8 +135,54 @@ class JSONBackend:
         self.fp.seek(0)
         json.dump({'aliases': aliases}, self.fp, cls=AliasesJSONEncoder,
                   indent=4, sort_keys=True)
+        self.fp.truncate()
 
     def add_alias(self, alias):
         aliases = self.get_aliases()
         aliases[alias.alias] = alias
         self.write_aliases(aliases)
+
+
+def open_file(path):
+    if not path.exists():
+        f = path.open('w')
+        f.close()
+    f = path.open('r+')
+    return f
+
+
+def make_aliasdb(path):
+    f = open_file(path)
+    backend = JSONBackend(f)
+    aliases = Aliases(backend)
+    return aliases
+
+
+def process_opts(opts, aliases):
+    if opts['-a']:
+        alias = Alias(opts['-a'], opts['<command>'])
+        aliases.add_alias(alias)
+    if opts['-s']:
+        script = aliases.get_sh_script()
+        if opts['--output'] == "-":
+            print(script)
+        else:
+            outpath = Path(opts['--output'])
+            outfile = outpath.open('w')
+            outfile.write(script)
+            outfile.close()
+
+
+def main_opts(opts):
+    json_path = Path(os.path.expanduser(opts['--json']))
+    aliases = make_aliasdb(json_path)
+    process_opts(opts, aliases)
+
+
+def main(args):
+    opts = docopt(__doc__, args[1:])
+    main_opts(opts)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
