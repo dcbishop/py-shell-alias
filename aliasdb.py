@@ -2,16 +2,17 @@
 """aliasdb.py.
 
 Usage:
-    aliasdb.py [--json=FILE] -s [-o OUTPUT]
-    aliasdb.py -a <name> <command> [-j <aliases.json>]
+    aliasdb.py -a <name> <command>
     aliasdb.py -r <name>
+    aliasdb.py [--json=FILE|--yaml=FILE] -s [-o OUTPUT]
     aliasdb.py <name>
     aliasdb.py (-h | --help)
 
 Options:
     -s                          Generate shell script.
-    -j FILE, --json=FILE        Read aliases from JSON file.
-                                [default: ~/.config/aliases.json]
+    -j FILE, --json=FILE        Read/store aliases as JSON file.
+    -y FILE, --yaml=FILE        Read/store aliases as YAML file.
+                                [default: ~/.config/aliases.yaml]
     -a <name> <command>         Add alias to database.
                                 Will override any alias with the same name.
     -r <name>, --remove <name>  Remove an alias from the database.
@@ -262,12 +263,22 @@ def open_file(path):
     return f
 
 
-def make_aliasdb(path):
+def make_json_aliasdb(path):
     """
     Makes an Aliases class with a JSON backend from the file given by path.
     """
     f = open_file(path)
     backend = JSONBackend(f)
+    aliases = AliasDB(backend)
+    return aliases
+
+
+def make_yaml_aliasdb(path):
+    """
+    Makes an Aliases class with a YAML backend from the file given by path.
+    """
+    f = open_file(path)
+    backend = YAMLBackend(f)
     aliases = AliasDB(backend)
     return aliases
 
@@ -305,8 +316,12 @@ def main_opts(opts):
     Run the program using the options given in opts which is expected
     to be a dictionary in the format output by docopt.
     """
-    json_path = Path(os.path.expanduser(opts['--json']))
-    aliases = make_aliasdb(json_path)
+    if opts.get('--json', None) is not None:
+        json_path = Path(os.path.expanduser(opts['--json']))
+        aliases = make_json_aliasdb(json_path)
+    else:
+        yaml_path = Path(os.path.expanduser(opts['--yaml']))
+        aliases = make_yaml_aliasdb(yaml_path)
     process_opts(opts, aliases)
 
 
