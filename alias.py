@@ -46,8 +46,12 @@ class Alias:
         return str((self.alias, self.command, self.category))
 
 
+def escape(string):
+    return string.replace('"', '\\"')
+
+
 def get_sh_alias_command(alias, command):
-    return 'alias %s="%s"\n' % (alias, command)
+    return 'alias %s="%s"\n' % (alias, escape(command))
 
 
 def aliases_to_tuplelist(aliases):

@@ -74,35 +74,40 @@ class TestJSON(unittest.TestCase):
         json.load(f, cls=alias.AliasesJSONDecoder)
 
 
+def make_aliases(f=None):
+    if f is None:
+        f = io.StringIO()
+    backend = JSONBackend(f)
+    aliases = Aliases(backend)
+    return aliases
+
+
 class TestAlias(unittest.TestCase):
     def test_parse_alias(self):
         f = get_simple_alias_json_stringio()
-        backend = JSONBackend(f)
-        aliases = Aliases(backend)
+        aliases = make_aliases(f)
         script = aliases.get_sh_script()
         self.assertEqual(script, 'alias lst="ls -lhar --sort time"\n')
 
     def test_add_alias(self):
         f = io.StringIO('{"aliases": {}}')
-        backend = JSONBackend(f)
-        alias = Aliases(backend)
+        aliases = make_aliases(f)
 
-        alias.add_alias(Alias("lst", "ls -lhar --sort time"))
-        alias.add_alias(Alias("lss", "ls -lhar --sort size"))
-        script = alias.get_sh_script()
+        aliases.add_alias(Alias("lst", "ls -lhar --sort time"))
+        aliases.add_alias(Alias("lss", "ls -lhar --sort size"))
+        script = aliases.get_sh_script()
 
         self.assertEqual('alias lss="ls -lhar --sort size"\n' +
                          'alias lst="ls -lhar --sort time"\n', script)
 
     def test_change_alias(self):
         f = io.StringIO('{"aliases": {}}')
-        backend = JSONBackend(f)
-        alias = Aliases(backend)
+        aliases = make_aliases(f)
 
-        alias.add_alias(Alias("lss", "ls -lhar --sort size"))
-        alias.add_alias(Alias("lss", "ls -lha --sort size"))
+        aliases.add_alias(Alias("lss", "ls -lhar --sort size"))
+        aliases.add_alias(Alias("lss", "ls -lha --sort size"))
 
-        script = alias.get_sh_script()
+        script = aliases.get_sh_script()
 
         self.assertEqual('alias lss="ls -lha --sort size"\n', script)
 
@@ -110,3 +115,12 @@ class TestAlias(unittest.TestCase):
         f = io.StringIO()
         backend = JSONBackend(f)
         backend.write_aliases(make_fake_aliases())
+
+    def test_containsdoublequotes(self):
+        aliases = make_aliases()
+
+        aliases.add_alias(Alias('test', 'echo "This contains quotes"'))
+        result = aliases.get_sh_script()
+
+        expected = "alias test=\"echo \\\"This contains quotes\\\"\"\n"
+        self.assertEqual(expected, result)
