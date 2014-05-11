@@ -100,6 +100,19 @@ class TestAlias(unittest.TestCase):
         self.assertEqual('alias lss="ls -lhar --sort size"\n' +
                          'alias lst="ls -lhar --sort time"\n', script)
 
+    def test_remove_alias(self):
+        aliasdb = make_aliases()
+        aliasdb.add_alias(Alias('one', 'one'))
+        aliasdb.add_alias(Alias('two', 'two'))
+        aliasdb.add_alias(Alias('three', 'three'))
+
+        aliases = aliasdb.get_aliases()
+        self.assertEqual(len(aliases), 3)
+
+        aliasdb.remove_alias('two')
+        aliases = aliasdb.get_aliases()
+        self.assertEqual(len(aliases), 2)
+
     def test_change_alias(self):
         f = io.StringIO('{"aliases": {}}')
         aliases = make_aliases(f)

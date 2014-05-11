@@ -4,6 +4,7 @@
 Usage:
     aliasdb.py [--json=FILE] -s [-o OUTPUT]
     aliasdb.py -a <name> <command> [-j <aliases.json>]
+    aliasdb.py -r <name>
     aliasdb.py <name>
     aliasdb.py (-h | --help)
 
@@ -13,6 +14,7 @@ Options:
                                 [default: ~/.config/aliases.json]
     -a <name> <command>         Add alias to database.
                                 Will override any alias with the same name.
+    -r <name>, --remove <name>  Remove an alias from the database.
     -o OUTPUT, --output=OUTPUT  Output to file [default: -]
     -h --help                   Show help.
 """
@@ -93,6 +95,12 @@ class AliasDB:
         Adds an Alias to the database.
         """
         self.backend.add_alias(alias)
+
+    def remove_alias(self, alias_name):
+        """
+        Removes an aliias from the database.
+        """
+        self.backend.remove_alias(alias_name)
 
     def get_sh_script(self):
         """
@@ -196,6 +204,14 @@ class JSONBackend:
         aliases[alias.alias_name] = alias
         self.write_aliases(aliases)
 
+    def remove_alias(self, alias_name):
+        """
+        Remove an alias from the JSON file.
+        """
+        aliases = self.get_aliases()
+        del aliases[alias_name]
+        self.write_aliases(aliases)
+
 
 def open_file(path):
     """
@@ -235,6 +251,11 @@ def process_opts(opts, aliases):
             outfile = outpath.open('w')
             outfile.write(script)
             outfile.close()
+    elif opts.get('--remove', None) is not None:
+        try:
+            aliases.remove_alias(opts['--remove'])
+        except (KeyError):
+            print("Alias not found")
     elif opts.get('<name>', None) is not None:
         alias = aliases.get_alias(opts['<name>'])
         if alias is not None:
