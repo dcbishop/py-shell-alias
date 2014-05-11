@@ -132,17 +132,6 @@ class AliasDB:
         return self.get_aliases().get(alias_name, None)
 
 
-class AliasesJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Alias):
-            dobj = {
-                'command': obj.command,
-                'category': obj.category
-            }
-            return dobj
-        return super(AliasesJSONEncoder, self).encode(obj)
-
-
 def dict_to_alias(alias, item):
     """
     Convert a dict to an Alias object.
@@ -172,17 +161,6 @@ def aliases_to_dicts(adict):
             'category': value.category
         }
     return ddict
-
-
-class AliasesJSONDecoder(json.JSONDecoder):
-    def decode(self, json_string):
-        if json_string == '':
-            return {}
-        default_obj = super(AliasesJSONDecoder, self).decode(json_string)
-        if 'aliases' in default_obj:
-            alias_objects = dicts_to_aliases(default_obj['aliases'])
-            default_obj['aliases'] = alias_objects
-        return default_obj
 
 
 class AliasBackend:
@@ -216,17 +194,23 @@ class JSONBackend(AliasBackend):
         Returns a dictionary of Aliases read from the file.
         """
         self.fp.seek(0)
-        d = json.load(self.fp, cls=AliasesJSONDecoder)
-        if 'aliases' in d:
-            return d['aliases']
-        return {}
+
+        try:
+            d = json.load(self.fp)
+        except:
+            return {}
+
+        aliases = d.get('aliases', {})
+        aliases = dicts_to_aliases(aliases)
+        return aliases
 
     def write_aliases(self, aliases):
         """
         Writes out a dict of aliases to the file in JSON format.
         """
         self.fp.seek(0)
-        json.dump({'aliases': aliases}, self.fp, cls=AliasesJSONEncoder,
+        aliases = aliases_to_dicts(aliases)
+        json.dump({'aliases': aliases}, self.fp,
                   indent=4, sort_keys=True)
         self.fp.truncate()
 
