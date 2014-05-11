@@ -141,7 +141,7 @@ def dict_to_alias(alias, item):
 
 def dicts_to_aliases(dlist):
     """
-    Convert a dict of dicts to a dict of Alias objects.
+    Convert a dictionary of dictionaries to a dictionary of Alias objects.
     """
     olist = {}
     for item in dlist:
@@ -150,20 +150,30 @@ def dicts_to_aliases(dlist):
     return olist
 
 
+def alias_to_dict(alias):
+    """
+    Convert type Alias to a dictionary.
+    """
+    return {
+        'command': alias.command,
+        'category': alias.category
+    }
+
+
 def aliases_to_dicts(adict):
     """
     Convert a dictionary of aliases to a dictionary of dictionaries.
     """
     ddict = {}
     for key, value in adict.items():
-        ddict[key] = {
-            'command': value.command,
-            'category': value.category
-        }
+        ddict[key] = alias_to_dict(value)
     return ddict
 
 
 class AliasBackend:
+    """
+    The interface to the database storage for aliases.
+    """
     def __init__(self, fp):
         self.fp = fp
 
@@ -223,6 +233,9 @@ class JSONBackend(AliasBackend):
 
 
 class YAMLBackend(AliasBackend):
+    """
+    A YAML Backend for AliasDB.
+    """
     def get_aliases_as_dicts(self):
         try:
             d = yaml.load(self.fp)
