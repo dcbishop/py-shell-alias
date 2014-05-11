@@ -74,53 +74,53 @@ class TestJSON(unittest.TestCase):
         json.load(f, cls=aliasdb.AliasesJSONDecoder)
 
 
-def make_aliases(f=None):
+def make_test_aliasdb(f=None):
     if f is None:
         f = io.StringIO()
     backend = JSONBackend(f)
-    aliases = AliasDB(backend)
-    return aliases
+    adb = AliasDB(backend)
+    return adb
 
 
 class TestAlias(unittest.TestCase):
     def test_parse_alias(self):
         f = get_simple_alias_json_stringio()
-        aliases = make_aliases(f)
-        script = aliases.get_sh_script()
+        adb = make_test_aliasdb(f)
+        script = adb.get_sh_script()
         self.assertEqual(script, 'alias lst="ls -lhar --sort time"\n')
 
     def test_add_alias(self):
         f = io.StringIO('{"aliases": {}}')
-        aliases = make_aliases(f)
+        adb = make_test_aliasdb(f)
 
-        aliases.add_alias(Alias("lst", "ls -lhar --sort time"))
-        aliases.add_alias(Alias("lss", "ls -lhar --sort size"))
-        script = aliases.get_sh_script()
+        adb.add_alias(Alias("lst", "ls -lhar --sort time"))
+        adb.add_alias(Alias("lss", "ls -lhar --sort size"))
+        script = adb.get_sh_script()
 
         self.assertEqual('alias lss="ls -lhar --sort size"\n' +
                          'alias lst="ls -lhar --sort time"\n', script)
 
     def test_remove_alias(self):
-        aliasdb = make_aliases()
-        aliasdb.add_alias(Alias('one', 'one'))
-        aliasdb.add_alias(Alias('two', 'two'))
-        aliasdb.add_alias(Alias('three', 'three'))
+        adb = make_test_aliasdb()
+        adb.add_alias(Alias('one', 'one'))
+        adb.add_alias(Alias('two', 'two'))
+        adb.add_alias(Alias('three', 'three'))
 
-        aliases = aliasdb.get_aliases()
+        aliases = adb.get_aliases()
         self.assertEqual(len(aliases), 3)
 
-        aliasdb.remove_alias('two')
-        aliases = aliasdb.get_aliases()
+        adb.remove_alias('two')
+        aliases = adb.get_aliases()
         self.assertEqual(len(aliases), 2)
 
     def test_change_alias(self):
         f = io.StringIO('{"aliases": {}}')
-        aliases = make_aliases(f)
+        adb = make_test_aliasdb(f)
 
-        aliases.add_alias(Alias("lss", "ls -lhar --sort size"))
-        aliases.add_alias(Alias("lss", "ls -lha --sort size"))
+        adb.add_alias(Alias("lss", "ls -lhar --sort size"))
+        adb.add_alias(Alias("lss", "ls -lha --sort size"))
 
-        script = aliases.get_sh_script()
+        script = adb.get_sh_script()
 
         self.assertEqual('alias lss="ls -lha --sort size"\n', script)
 
@@ -130,28 +130,28 @@ class TestAlias(unittest.TestCase):
         backend.write_aliases(make_fake_aliases())
 
     def test_contains_singlequote(self):
-        aliases = make_aliases()
+        adb = make_test_aliasdb()
 
-        aliases.add_alias(Alias('test', "echo 'This contains quotes'"))
-        result = aliases.get_sh_script()
+        adb.add_alias(Alias('test', "echo 'This contains quotes'"))
+        result = adb.get_sh_script()
 
         expected = """alias test="echo \\\'This contains quotes\\\'"\n"""
         self.assertEqual(expected, result)
 
     def test_contains_doublequotes(self):
-        aliases = make_aliases()
+        adb = make_test_aliasdb()
 
-        aliases.add_alias(Alias('test', 'echo "This contains quotes"'))
-        result = aliases.get_sh_script()
+        adb.add_alias(Alias('test', 'echo "This contains quotes"'))
+        result = adb.get_sh_script()
 
         expected = "alias test=\"echo \\\"This contains quotes\\\"\"\n"
         self.assertEqual(expected, result)
 
     def test_contains_brackets(self):
-        aliases = make_aliases()
+        adb = make_test_aliasdb()
 
-        aliases.add_alias(Alias('hasbrackets', 'echo (This is in brackets)'))
-        result = aliases.get_sh_script()
+        adb.add_alias(Alias('hasbrackets', 'echo (This is in brackets)'))
+        result = adb.get_sh_script()
 
         expected = 'alias hasbrackets="echo (This is in brackets)"\n'
         self.assertEqual(expected, result)
