@@ -5,7 +5,7 @@ Usage:
     aliasdb.py -a <name> <command>
     aliasdb.py -r <name>
     aliasdb.py [--json=FILE|--yaml=FILE] -s [-o OUTPUT]
-    aliasdb.py <name>
+    aliasdb.py <name> [-o OUTPUT]
     aliasdb.py (-h | --help)
 
 Options:
@@ -283,32 +283,41 @@ def make_yaml_aliasdb(path):
     return aliases
 
 
+def get_outfile(filename):
+    """
+    Returns a file for output from the filename.
+    If file name is '-' then sys.stdout is used.
+    """
+    if filename == '-':
+        return sys.stdout
+
+    return open(filename, 'w')
+
+
 def process_opts(opts, aliases):
     """
     Takes a dictionary of options in the format output by docopt
     and talks to the alias database baned on them.
     """
+    out = get_outfile(opts.get('--output', '-'))
+
     if opts['-a']:
         alias = Alias(opts['-a'], opts['<command>'])
         aliases.add_alias(alias)
     elif opts['-s']:
         script = aliases.get_sh_script()
-        if opts['--output'] == "-":
-            print(script)
-        else:
-            outpath = Path(opts['--output'])
-            outfile = outpath.open('w')
-            outfile.write(script)
-            outfile.close()
+        out.write(script)
     elif opts.get('--remove', None) is not None:
         try:
             aliases.remove_alias(opts['--remove'])
         except (KeyError):
-            print("Alias not found")
+            print("%s: Alias not found." % sys.argv[0], file=sys.stderr)
     elif opts.get('<name>', None) is not None:
         alias = aliases.get_alias(opts['<name>'])
         if alias is not None:
-            print(get_sh_alias_command(opts['<name>'], alias.command))
+            out.write(get_sh_alias_command(opts['<name>'], alias.command))
+
+    out.close()
 
 
 def main_opts(opts):
