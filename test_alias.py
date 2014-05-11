@@ -1,8 +1,8 @@
 import unittest
 import json
 import io
-import alias
-from alias import Alias, Aliases, JSONBackend
+import aliasdb
+from aliasdb import Alias, AliasDB, JSONBackend
 
 
 class FakeAliasDatabase():
@@ -65,20 +65,20 @@ class TestJSON(unittest.TestCase):
             'lss': Alias('lss', 'ls -lhar --sort size')
         }
 
-        result = alias.dicts_to_aliases(example)
+        result = aliasdb.dicts_to_aliases(example)
 
         self.assertDictEqual(result, expected)
 
     def test_decode(self):
         f = get_simple_alias_json_stringio()
-        json.load(f, cls=alias.AliasesJSONDecoder)
+        json.load(f, cls=aliasdb.AliasesJSONDecoder)
 
 
 def make_aliases(f=None):
     if f is None:
         f = io.StringIO()
     backend = JSONBackend(f)
-    aliases = Aliases(backend)
+    aliases = AliasDB(backend)
     return aliases
 
 
