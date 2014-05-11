@@ -47,7 +47,11 @@ class Alias:
 
 
 def escape(string):
-    return string.replace('"', '\\"')
+    string = string.replace('"', '\\"')
+    string = string.replace("'", "\\'")
+    string = string.replace("(", "\\(")
+    string = string.replace(")", "\\)")
+    return string
 
 
 def get_sh_alias_command(alias, command):

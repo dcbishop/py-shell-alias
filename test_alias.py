@@ -124,3 +124,12 @@ class TestAlias(unittest.TestCase):
 
         expected = "alias test=\"echo \\\"This contains quotes\\\"\"\n"
         self.assertEqual(expected, result)
+
+    def test_contains_brackets(self):
+        aliases = make_aliases()
+
+        aliases.add_alias(Alias('hasbrackets', 'echo (This is in brackets)'))
+        result = aliases.get_sh_script()
+
+        expected = 'alias hasbrackets="echo \\(This is in brackets\\)"\n'
+        self.assertEqual(expected, result)
