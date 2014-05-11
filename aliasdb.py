@@ -221,12 +221,18 @@ class YAMLBackend(AliasBackend):
 
     def get_aliases(self):
         self.fp.seek(0)
-        d = yaml.load(self.fp)
+
+        try:
+            d = yaml.load(self.fp)
+        except:
+            return {}
+
         if d is None:
             return {}
-        if d.get('aliases', None):
-            return dicts_to_aliases(d['aliases'])
-        return None
+
+        aliases = d.get('aliases', {})
+        aliases = dicts_to_aliases(aliases)
+        return aliases
 
     def write_aliases(self, aliases):
         self.fp.seek(0)
