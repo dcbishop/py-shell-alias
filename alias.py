@@ -4,6 +4,7 @@
 Usage:
     alias.py [--json=FILE] -s [-o OUTPUT]
     alias.py -a <name> <command> [-j <aliases.json>]
+    alias.py <name>
     alias.py (-h | --help)
 
 Options:
@@ -75,7 +76,7 @@ class Aliases:
 
     def get_sh_script(self):
         script = ""
-        aliases = self.backend.get_aliases()
+        aliases = self.get_aliases()
 
         alias_list = aliases_to_tuplelist(aliases)
 
@@ -84,6 +85,12 @@ class Aliases:
             script = script + new_line
 
         return script
+
+    def get_aliases(self):
+        return self.backend.get_aliases()
+
+    def get_alias(self, aliasname):
+        return self.get_aliases().get(aliasname, None)
 
 
 class AliasesJSONEncoder(json.JSONEncoder):
@@ -168,7 +175,7 @@ def process_opts(opts, aliases):
     if opts['-a']:
         alias = Alias(opts['-a'], opts['<command>'])
         aliases.add_alias(alias)
-    if opts['-s']:
+    elif opts['-s']:
         script = aliases.get_sh_script()
         if opts['--output'] == "-":
             print(script)
@@ -177,6 +184,10 @@ def process_opts(opts, aliases):
             outfile = outpath.open('w')
             outfile.write(script)
             outfile.close()
+    elif opts.get('<name>', None) is not None:
+        alias = aliases.get_alias(opts['<name>'])
+        if alias is not None:
+            print(get_sh_alias_command(opts['<name>'], alias.command))
 
 
 def main_opts(opts):
