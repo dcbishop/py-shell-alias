@@ -23,10 +23,11 @@ __author__ = 'David C. Bishop'
 __version__ = '1.0'
 __license__ = 'CC0'
 
+import abc
+import os
+import sys
 import json
 import yaml
-import sys
-import os
 from pathlib import Path
 from docopt import docopt
 
@@ -170,10 +171,11 @@ def aliases_to_dicts(adict):
     return ddict
 
 
-class AliasBackend:
+class AliasBackend(metaclass=abc.ABCMeta):
     """
     The interface to the database storage for aliases.
     """
+
     def __init__(self, fp):
         self.fp = fp
 
@@ -215,6 +217,15 @@ class AliasBackend:
         self.write_aliases_as_dicts(aliases)
         self.fp.truncate()
 
+    @abc.abstractmethod
+    def get_aliases_as_dicts(self):
+        """Reads aliases from file as a dictionary of dictionaries."""
+        raise NotImplementedError("Please Implement this method")
+
+    @abc.abstractmethod
+    def write_aliases_as_dicts(self, dicts):
+        """Writes dictionary to the file."""
+        raise NotImplementedError("Please Implement this method")
 
 class JSONBackend(AliasBackend):
     """

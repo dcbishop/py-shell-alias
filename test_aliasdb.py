@@ -177,6 +177,11 @@ class TestJSON(unittest.TestCase):
 
 
 class TestScript(unittest.TestCase):
+    def test_abstract_backend_fail(self):
+        self.assertRaises(
+            TypeError, aliasdb.AliasBackend, io.StringIO()
+        )
+
     def test_contains_singlequote(self):
         adb = make_test_json_aliasdb()
 
