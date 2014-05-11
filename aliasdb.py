@@ -23,6 +23,7 @@ __version__ = '1.0'
 __license__ = 'CC0'
 
 import json
+import yaml
 import sys
 import os
 from pathlib import Path
@@ -159,6 +160,19 @@ def dicts_to_aliases(dlist):
     return olist
 
 
+def aliases_to_dicts(adict):
+    """
+    Convert a dictionary of aliases to a dictionary of dictionaries.
+    """
+    ddict = {}
+    for key, value in adict.items():
+        ddict[key] = {
+            'command': value.command,
+            'category': value.category
+        }
+    return ddict
+
+
 class AliasesJSONDecoder(json.JSONDecoder):
     def decode(self, json_string):
         if json_string == '':
@@ -170,12 +184,31 @@ class AliasesJSONDecoder(json.JSONDecoder):
         return default_obj
 
 
-class JSONBackend:
+class AliasBackend:
+    def __init__(self, fp):
+        self.fp = fp
+
+    def remove_alias(self, alias_name):
+        """
+        Remove an alias from the file.
+        """
+        aliases = self.get_aliases()
+        del aliases[alias_name]
+        self.write_aliases(aliases)
+
+    def add_alias(self, alias):
+        """
+        Adds an alias to the JSON file.
+        """
+        aliases = self.get_aliases()
+        aliases[alias.alias_name] = alias
+        self.write_aliases(aliases)
+
+
+class JSONBackend(AliasBackend):
     """
     A JSON Backend for AliasDB.
     """
-    def __init__(self, fp):
-        self.fp = fp
 
     def get_aliases(self):
         """
@@ -196,21 +229,26 @@ class JSONBackend:
                   indent=4, sort_keys=True)
         self.fp.truncate()
 
-    def add_alias(self, alias):
-        """
-        Adds an alias to the JSON file.
-        """
-        aliases = self.get_aliases()
-        aliases[alias.alias_name] = alias
-        self.write_aliases(aliases)
 
-    def remove_alias(self, alias_name):
-        """
-        Remove an alias from the JSON file.
-        """
-        aliases = self.get_aliases()
-        del aliases[alias_name]
-        self.write_aliases(aliases)
+class YAMLBackend(AliasBackend):
+    def __init__(self, fp):
+        self.fp = fp
+
+    def get_aliases(self):
+        self.fp.seek(0)
+        d = yaml.load(self.fp)
+        if d is None:
+            return {}
+        if d.get('aliases', None):
+            return dicts_to_aliases(d['aliases'])
+        return None
+
+    def write_aliases(self, aliases):
+        self.fp.seek(0)
+        aliases = aliases_to_dicts(aliases)
+        yaml.dump({'aliases': aliases}, self.fp,
+                  default_flow_style=False, indent=4)
+        self.fp.truncate()
 
 
 def open_file(path):
