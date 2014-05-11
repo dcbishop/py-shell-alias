@@ -140,5 +140,5 @@ class TestAlias(unittest.TestCase):
         aliases.add_alias(Alias('hasbrackets', 'echo (This is in brackets)'))
         result = aliases.get_sh_script()
 
-        expected = 'alias hasbrackets="echo \\(This is in brackets\\)"\n'
+        expected = 'alias hasbrackets="echo (This is in brackets)"\n'
         self.assertEqual(expected, result)
