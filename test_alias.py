@@ -116,7 +116,16 @@ class TestAlias(unittest.TestCase):
         backend = JSONBackend(f)
         backend.write_aliases(make_fake_aliases())
 
-    def test_containsdoublequotes(self):
+    def test_contains_singlequote(self):
+        aliases = make_aliases()
+
+        aliases.add_alias(Alias('test', "echo 'This contains quotes'"))
+        result = aliases.get_sh_script()
+
+        expected = """alias test="echo \\\'This contains quotes\\\'"\n"""
+        self.assertEqual(expected, result)
+
+    def test_contains_doublequotes(self):
         aliases = make_aliases()
 
         aliases.add_alias(Alias('test', 'echo "This contains quotes"'))
