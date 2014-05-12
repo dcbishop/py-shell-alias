@@ -45,9 +45,9 @@ class Alias:
 
     def __eq__(self, other):
         if other is None:
-            return -1
+            return False
         if not isinstance(other, Alias):
-            return -1
+            return False
         return ((self.alias_name == other.alias_name) and
                 (self.command == other.command) and
                 (self.category == other.category))

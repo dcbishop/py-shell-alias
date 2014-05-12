@@ -28,6 +28,7 @@ class TestAliasObj(unittest.TestCase):
 
         self.assertEqual(a1, a2)
         self.assertNotEqual(a1, a3)
+        self.assertNotEqual(a1, None)
 
     def test_dicts_to_aliases(self):
         example = {
