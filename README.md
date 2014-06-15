@@ -1,7 +1,7 @@
 aliasdb.py
 ----------
 
-Keeps a persistant list of alias command for the shell in either YAML or JSON format.
+Keeps a persistent list of alias command for the shell in either YAML or JSON format.
 
 Requires Python 3, docopt and pyyaml:
     % python -m ensurepip --upgrade
@@ -25,7 +25,7 @@ Specify a json file:
 
     % ./aliasdb.py --json=aliases.json -a lst "ls -lhr --sort size"
 
-To write out a shell script with aliases loaded from a YAML file to a specfied file:
+To write out a shell script with aliases loaded from a YAML file to a specified file:
 
     % ./aliasdb.py --yaml=aliases.yaml -s --output=aliases.sh
 
